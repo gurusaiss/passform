@@ -14,33 +14,39 @@ import {
   Printer,
   Check,
   ShieldCheck,
+  FileText,
+  Compass,
 } from "lucide-react";
 
 export default function QrPosterPage() {
   const { branding, event } = defaultPlatformConfig;
-  const canonicalUrl =
+  const baseUrl =
     typeof window !== "undefined"
       ? window.location.origin
       : process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+  // Target toggle: direct to form or full landing page
+  const [targetType, setTargetType] = useState<"direct" | "landing">("direct");
+  const targetUrl = targetType === "direct" ? `${baseUrl}/register` : baseUrl;
 
   const [copied, setCopied] = useState(false);
   const [qrSize, setQrSize] = useState<number>(512);
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(canonicalUrl);
+    navigator.clipboard.writeText(targetUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleDownloadPng = () => {
     window.location.href = `/api/qr?url=${encodeURIComponent(
-      canonicalUrl
+      targetUrl
     )}&width=${qrSize}&download=true`;
   };
 
   const handleDownloadSvg = () => {
     window.location.href = `/api/qr?url=${encodeURIComponent(
-      canonicalUrl
+      targetUrl
     )}&format=svg&download=true`;
   };
 
@@ -67,15 +73,50 @@ export default function QrPosterPage() {
               Print-Ready Registration QR Code
             </h1>
             <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
-              Generate and download crisp, high-resolution vector and raster QR codes for physical event posters, standees, and digital marketing materials.
+              Generate and download crisp, high-resolution vector and raster QR codes for physical posters, standees, and social media flyers.
             </p>
           </div>
 
+          {/* QR Target Destination Selector */}
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-2 p-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl max-w-md mx-auto">
+            <button
+              type="button"
+              onClick={() => setTargetType("direct")}
+              className={`flex-1 w-full sm:w-auto flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl text-xs font-bold transition-all ${
+                targetType === "direct"
+                  ? "bg-white text-blue-700 shadow-sm dark:bg-slate-700 dark:text-white"
+                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+              }`}
+            >
+              <FileText className="w-4 h-4" />
+              <span>Direct Form (Posters)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setTargetType("landing")}
+              className={`flex-1 w-full sm:w-auto flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl text-xs font-bold transition-all ${
+                targetType === "landing"
+                  ? "bg-white text-blue-700 shadow-sm dark:bg-slate-700 dark:text-white"
+                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+              }`}
+            >
+              <Compass className="w-4 h-4" />
+              <span>Full Landing Page</span>
+            </button>
+          </div>
+
+          <p className="text-center text-[11px] text-slate-500 mt-2">
+            {targetType === "direct"
+              ? "⭐ Recommended for physical posters: camera scan immediately displays the registration form without scrolling."
+              : "Best for social posts and ads where visitors want to read the full agenda and FAQs first."}
+          </p>
+
           {/* QR Display Card */}
-          <div className="my-8 flex flex-col items-center justify-center p-8 rounded-2xl border border-slate-200/80 bg-slate-50 dark:border-slate-800 dark:bg-slate-950/50">
+          <div className="my-6 flex flex-col items-center justify-center p-8 rounded-2xl border border-slate-200/80 bg-slate-50 dark:border-slate-800 dark:bg-slate-950/50">
             <div className="p-4 rounded-2xl bg-white shadow-md border border-slate-200">
               <img
-                src={`/api/qr?url=${encodeURIComponent(canonicalUrl)}&width=350`}
+                src={`/api/qr?url=${encodeURIComponent(targetUrl)}&width=350`}
                 alt="Registration QR Code"
                 className="w-56 h-56 sm:w-64 sm:h-64 object-contain"
               />
@@ -83,10 +124,12 @@ export default function QrPosterPage() {
 
             <div className="mt-4 text-center">
               <p className="text-xs font-mono font-semibold text-slate-700 dark:text-slate-300">
-                {canonicalUrl}
+                {targetUrl}
               </p>
               <p className="text-[11px] text-slate-400 mt-0.5">
-                Encodes direct, frictionless access to your branded registration form
+                {targetType === "direct"
+                  ? "Opens the registration form directly on the user's mobile screen"
+                  : "Opens the full overview landing page"}
               </p>
             </div>
           </div>
@@ -116,14 +159,25 @@ export default function QrPosterPage() {
 
           {/* Clickable Social Share Link */}
           <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-2">
-              Shareable Direct Link (Social Media & WhatsApp)
-            </h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                Shareable Direct Link
+              </h3>
+              <a
+                href={targetUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-blue-600 hover:underline flex items-center gap-1 font-semibold"
+              >
+                <span>Test link</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
             <div className="flex items-center gap-2">
               <input
                 type="text"
                 readOnly
-                value={canonicalUrl}
+                value={targetUrl}
                 className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-mono text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 select-all"
               />
               <Button
